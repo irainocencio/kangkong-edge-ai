@@ -1,13 +1,13 @@
 """
 Centralized logging configuration.
+
+Provides a shared logger instance for the entire
+Edge AI Monitoring System.
 """
 
 import logging
-from pathlib import Path
 
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-LOGS_DIR = PROJECT_ROOT / "logs"
+from app.config.settings import LOG_FILE, LOG_LEVEL
 
 
 def configure_logger() -> logging.Logger:
@@ -17,26 +17,27 @@ def configure_logger() -> logging.Logger:
 
     logger = logging.getLogger("EdgeAI")
 
+    # Prevent duplicate handlers if imported multiple times
     if logger.hasHandlers():
         return logger
 
-    logger.setLevel(logging.INFO)
+    logger.setLevel(LOG_LEVEL)
 
     formatter = logging.Formatter(
         "[%(asctime)s] %(levelname)s | %(message)s",
         "%Y-%m-%d %H:%M:%S"
     )
 
-    # Ensure logs directory exists
-    LOGS_DIR.mkdir(exist_ok=True)
+    # Ensure the log directory exists
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-    # Console output
+    # Console handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
 
-    # File output
+    # File handler
     file_handler = logging.FileHandler(
-        LOGS_DIR / "application.log",
+        LOG_FILE,
         encoding="utf-8"
     )
     file_handler.setFormatter(formatter)
