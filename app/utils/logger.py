@@ -6,6 +6,10 @@ import logging
 from pathlib import Path
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+LOGS_DIR = PROJECT_ROOT / "logs"
+
+
 def configure_logger() -> logging.Logger:
     """
     Configure and return the application's logger.
@@ -23,17 +27,16 @@ def configure_logger() -> logging.Logger:
         "%Y-%m-%d %H:%M:%S"
     )
 
-    # Create logs directory if it doesn't exist
-    log_dir = Path("logs")
-    log_dir.mkdir(exist_ok=True)
+    # Ensure logs directory exists
+    LOGS_DIR.mkdir(exist_ok=True)
 
-    # Console handler
+    # Console output
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
 
-    # File handler
+    # File output
     file_handler = logging.FileHandler(
-        log_dir / "application.log",
+        LOGS_DIR / "application.log",
         encoding="utf-8"
     )
     file_handler.setFormatter(formatter)
