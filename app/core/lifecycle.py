@@ -5,6 +5,8 @@ Responsible for managing the application's startup
 and shutdown procedures.
 """
 
+from app.utils.logger import logger
+
 
 class Lifecycle:
     """
@@ -19,16 +21,18 @@ class Lifecycle:
         """
         Execute the application startup sequence.
         """
-        print("========================================")
-        print("Starting Edge AI Monitoring System...")
-        print("Application startup complete.")
-        print("========================================")
+
+        logger.info("=" * 40)
+        logger.info("Starting Edge AI Monitoring System...")
+        logger.info("Application startup complete.")
+        logger.info("=" * 40)
 
     def shutdown(self):
         """
         Execute the application shutdown sequence.
         """
-        print("========================================")
-        print("Shutting down Edge AI Monitoring System...")
-        print("Shutdown complete.")
-        print("========================================")
+
+        logger.info("=" * 40)
+        logger.info("Shutting down Edge AI Monitoring System...")
+        logger.info("Shutdown complete.")
+        logger.info("=" * 40)
