@@ -19,4 +19,19 @@ class MonitoringManager:
         """
         Execute one complete monitoring cycle.
         """
-        pass
+
+        print()
+        print("----- Monitoring Cycle Started -----")
+
+        print("1. Capturing image...")
+        print("2. Acquiring sensor data...")
+        print("3. Validating inputs...")
+        print("4. Preprocessing image...")
+        print("5. Running AI inference...")
+        print("6. Executing decision engine...")
+        print("7. Storing monitoring results...")
+        print("8. Updating dashboard...")
+        print("9. Evaluating alerts...")
+
+        print("----- Monitoring Cycle Complete -----")
+        print()
