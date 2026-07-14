@@ -19,10 +19,16 @@ class Lifecycle:
         """
         Execute the application startup sequence.
         """
-        pass
+        print("========================================")
+        print("Starting Edge AI Monitoring System...")
+        print("Application startup complete.")
+        print("========================================")
 
     def shutdown(self):
         """
         Execute the application shutdown sequence.
         """
-        pass
+        print("========================================")
+        print("Shutting down Edge AI Monitoring System...")
+        print("Shutdown complete.")
+        print("========================================")
