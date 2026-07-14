@@ -1,5 +1,7 @@
 """
-Main entry point for the Edge AI Monitoring System.
+Application entry point.
+
+Starts the Edge AI Monitoring System.
 """
 
 from app.core.bootstrap import Bootstrap
@@ -7,14 +9,14 @@ from app.core.bootstrap import Bootstrap
 
 def main():
     """
-    Application entry point.
+    Build and execute the application.
     """
 
     bootstrap = Bootstrap()
+
     application = bootstrap.build()
 
-    application.start()
-    application.stop()
+    application.run()
 
 
 if __name__ == "__main__":

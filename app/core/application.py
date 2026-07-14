@@ -1,48 +1,35 @@
 """
 Application module.
 
-Contains the top-level Application class responsible for
-managing the lifecycle of the Edge AI Monitoring System.
+Coordinates the application's lifecycle and delegates
+monitoring execution to the scheduler.
 """
-
-from app.core.lifecycle import Lifecycle
-from app.core.scheduler import Scheduler
-from app.core.monitoring_manager import MonitoringManager
 
 
 class Application:
     """
-    Represents the entire monitoring application.
+    Main application class.
     """
 
-    def __init__(
-        self,
-        lifecycle: Lifecycle,
-        scheduler: Scheduler,
-        monitoring_manager: MonitoringManager
-    ):
+    def __init__(self, lifecycle, scheduler):
         """
-        Initialize the application with its core components.
+        Initialize the application.
+
+        Args:
+            lifecycle: Lifecycle manager.
+            scheduler: Scheduler instance.
         """
 
         self.lifecycle = lifecycle
         self.scheduler = scheduler
-        self.monitoring_manager = monitoring_manager
 
-    def start(self):
+    def run(self):
         """
-        Start the application.
+        Execute the application.
         """
 
         self.lifecycle.startup()
 
-        # Temporary implementation:
-        # Execute one monitoring cycle manually.
-        self.monitoring_manager.run_cycle()
-
-    def stop(self):
-        """
-        Stop the application.
-        """
+        self.scheduler.run()
 
         self.lifecycle.shutdown()

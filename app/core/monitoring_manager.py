@@ -1,8 +1,7 @@
 """
-Monitoring Manager module.
+Monitoring manager.
 
-Coordinates one complete monitoring cycle
-of the Edge AI Monitoring System.
+Coordinates one complete monitoring cycle.
 """
 
 from app.utils.logger import logger
@@ -10,28 +9,50 @@ from app.utils.logger import logger
 
 class MonitoringManager:
     """
-    Executes one monitoring cycle.
+    Coordinates the monitoring workflow.
     """
 
-    def __init__(self):
-        """Initialize the monitoring manager."""
-        pass
+    def __init__(
+            self, 
+            camera_service,
+            sensor_service,
+            validation_service,
+            preprocessing_service,
+            inference_service,
+            decision_service,   
+            storage_service,   
+            dashboard_service,
+            alert_service, 
+    ):
+        """
+        Initialize the monitoring manager.
+        """
+
+        self.camera = camera_service
+        self.sensor = sensor_service
+        self.validation = validation_service
+        self.preprocessing = preprocessing_service
+        self.inference = inference_service
+        self.decision = decision_service
+        self.storage = storage_service
+        self.dashboard = dashboard_service
+        self.alert = alert_service
 
     def run_cycle(self):
         """
-        Execute one complete monitoring cycle.
+        Execute one monitoring cycle.
         """
 
         logger.info("----- Monitoring Cycle Started -----")
 
-        logger.info("1. Capturing image...")
-        logger.info("2. Acquiring sensor data...")
-        logger.info("3. Validating inputs...")
-        logger.info("4. Preprocessing image...")
-        logger.info("5. Running AI inference...")
-        logger.info("6. Executing decision engine...")
-        logger.info("7. Storing monitoring results...")
-        logger.info("8. Updating dashboard...")
-        logger.info("9. Evaluating alerts...")
+        self.camera.capture()
+        self.sensor.read()
+        self.validation.validate()
+        self.preprocessing.process()
+        self.inference.predict()
+        self.decision.evaluate()
+        self.storage.save()
+        self.dashboard.update()
+        self.alert.check()
 
         logger.info("----- Monitoring Cycle Complete -----")

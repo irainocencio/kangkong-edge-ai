@@ -1,34 +1,37 @@
 """
 Scheduler module.
 
-Responsible for scheduling and triggering
-monitoring cycles.
+Responsible for triggering monitoring cycles.
 """
+
+from app.utils.logger import logger
 
 
 class Scheduler:
     """
-    Schedules and triggers monitoring cycles.
+    Controls when monitoring cycles are executed.
     """
 
-    def __init__(self):
-        """Initialize the scheduler."""
-        pass
+    def __init__(self, monitoring_manager):
+        """
+        Initialize the scheduler.
 
-    def start(self):
+        Args:
+            monitoring_manager: MonitoringManager instance.
         """
-        Start the scheduler.
-        """
-        pass
+        self.monitoring_manager = monitoring_manager
 
-    def stop(self):
+    def run(self):
         """
-        Stop the scheduler.
-        """
-        pass
+        Execute one scheduled monitoring cycle.
 
-    def trigger(self):
+        This is currently a placeholder implementation.
+        Future versions will execute according to the
+        configured monitoring interval.
         """
-        Trigger a monitoring cycle manually.
-        """
-        pass
+
+        logger.info("Scheduler started.")
+
+        self.monitoring_manager.run_cycle()
+
+        logger.info("Scheduler finished.")
