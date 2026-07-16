@@ -31,7 +31,7 @@ class Bootstrap:
 
     def __init__(self):
         """Initialize the bootstrap process."""
-        self.settings: ApplicationSettings = settings
+        self._settings: ApplicationSettings = settings
 
     def _build_lifecycle(self) -> Lifecycle:
         """
