@@ -9,6 +9,7 @@ from app.core.application import Application
 from app.core.lifecycle import Lifecycle
 from app.core.monitoring_manager import MonitoringManager
 from app.core.scheduler import Scheduler
+from app.config.settings import settings, ApplicationSettings
 
 
 
@@ -30,7 +31,7 @@ class Bootstrap:
 
     def __init__(self):
         """Initialize the bootstrap process."""
-        pass
+        self.settings: ApplicationSettings = settings
 
     def _build_lifecycle(self) -> Lifecycle:
         """
