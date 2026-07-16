@@ -1,22 +1,20 @@
 """
-Inference result domain model.
+Decision result domain model.
 
-Represents the output of the AI inference stage.
+Represents the business decision after AI inference.
 """
 
 from dataclasses import dataclass
-from datetime import datetime
 
 from app.domain.enums import PlantHealthStatus
 
 
 @dataclass(frozen=True, slots=True)
-class InferenceResult:
+class DecisionResult:
     """
-    Represents the result of AI inference.
+    Represents the evaluated monitoring decision.
     """
 
-    prediction: PlantHealthStatus
-    confidence: float
-    model_version: str
-    timestamp: datetime
+    health_status: PlantHealthStatus
+    should_alert: bool
+    reason: str

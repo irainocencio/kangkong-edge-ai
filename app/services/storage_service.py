@@ -4,18 +4,24 @@ Storage service.
 Responsible for persisting monitoring results.
 """
 
+from app.contracts.storage_contract import StorageServiceContract
+from app.domain.monitoring_result import MonitoringResult
 from app.utils.logger import logger
 
 
-class StorageService:
+class StorageService(StorageServiceContract):
     """
-    Handles storage of monitoring results.
+    Handles persistence of monitoring results.
     """
 
-    def save(self):
+    def save(
+        self,
+        monitoring_result: MonitoringResult,
+    ) -> None:
         """
-        Save monitoring results.
+        Save a monitoring result.
 
         Placeholder implementation.
         """
-        logger.info("7. Storing monitoring results...")
+
+        logger.info("7. Saving monitoring result...")
