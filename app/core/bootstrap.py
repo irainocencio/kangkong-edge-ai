@@ -80,12 +80,17 @@ class Bootstrap:
             hardware=hardware_provider.camera(),
         )
 
-    def _build_sensor_service(self) -> SensorService:
+    def _build_sensor_service(
+            self,
+            hardware_provider: HardwareProviderContract,
+        ) -> SensorService:
         """
         Create the sensor service.
         """
 
-        return SensorService()
+        return SensorService(
+            hardware=hardware_provider.sensor(),
+        )
 
     def _build_validation_service(self) -> ValidationService:
         """
@@ -214,7 +219,9 @@ class Bootstrap:
             hardware_provider=hardware_provider,
         )
 
-        sensor_service = self._build_sensor_service()
+        sensor_service = self._build_sensor_service(
+            hardware_provider=hardware_provider,
+        )
 
         validation_service = self._build_validation_service()
 

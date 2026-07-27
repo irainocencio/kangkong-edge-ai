@@ -4,10 +4,11 @@ Sensor service.
 Responsible for reading sensor values.
 """
 
-from datetime import datetime
-
 from app.contracts.sensor_contract import SensorServiceContract
 from app.domain.sensor_reading import SensorReading
+from app.hardware.contracts.sensor_hardware_contract import (
+    SensorHardwareContract,
+)
 from app.utils.logger import logger
 
 
@@ -16,19 +17,23 @@ class SensorService(SensorServiceContract):
     Handles sensor data acquisition.
     """
 
+    def __init__(
+        self,
+        hardware: SensorHardwareContract,
+    ) -> None:
+        """
+        Initialize the sensor service.
+        """
+
+        self._hardware = hardware
+
+        logger.info("Sensor service initialized.")
+
     def read(self) -> SensorReading:
         """
         Read sensor values.
-
-        Placeholder implementation.
         """
 
         logger.info("2. Reading sensors...")
 
-        return SensorReading(
-            soil_moisture=0.0,
-            soil_ph=0.0,
-            temperature=None,
-            humidity=None,
-            timestamp=datetime.now(),
-        )
+        return self._hardware.read()
