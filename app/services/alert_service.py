@@ -21,7 +21,21 @@ class AlertService(AlertServiceContract):
         """
         Evaluate whether an alert should be sent.
 
-        Placeholder implementation.
+        Notification providers will be integrated
+        after the decision logic has been completed.
         """
 
         logger.info("9. Checking alerts...")
+
+        if not monitoring_result.validation.is_valid:
+            logger.warning(
+                "Alert evaluation skipped because the "
+                "monitoring result is invalid."
+            )
+            return
+
+        logger.debug(
+            "Alert evaluation completed for monitoring "
+            "cycle at %s.",
+            monitoring_result.completed_at,
+        )

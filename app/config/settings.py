@@ -22,6 +22,7 @@ DATABASE_DIR = PROJECT_ROOT / "database"
 # Future directories
 RAW_IMAGES_DIR = DATASETS_DIR / "raw"
 PROCESSED_IMAGES_DIR = DATASETS_DIR / "processed"
+RESULTS_DIR = DATASETS_DIR / "results"
 
 # ==================================================
 # Logging
@@ -170,6 +171,7 @@ class StorageConfig:
     datasets_directory: Path
     raw_images_directory: Path
     processed_images_directory: Path
+    results_directory: Path
     models_directory: Path
 
 
@@ -228,6 +230,7 @@ settings = ApplicationSettings(
         datasets_directory=DATASETS_DIR,
         raw_images_directory=RAW_IMAGES_DIR,
         processed_images_directory=PROCESSED_IMAGES_DIR,
+        results_directory=RESULTS_DIR,
         models_directory=MODELS_DIR,
-    ),
+),
 )

@@ -1,7 +1,7 @@
 """
 Sensor service.
 
-Responsible for reading sensor values.
+Responsible for reading and calibrating sensor values.
 """
 
 from app.contracts.sensor_contract import SensorServiceContract
@@ -14,7 +14,7 @@ from app.utils.logger import logger
 
 class SensorService(SensorServiceContract):
     """
-    Handles sensor data acquisition.
+    Handles sensor data acquisition and calibration.
     """
 
     def __init__(
@@ -31,9 +31,40 @@ class SensorService(SensorServiceContract):
 
     def read(self) -> SensorReading:
         """
-        Read sensor values.
+        Read and calibrate sensor values.
         """
 
         logger.info("2. Reading sensors...")
 
-        return self._hardware.read()
+        # Read raw sensor voltages
+        reading = self._hardware.read()
+
+        # Calibrate soil pH
+        calibrated_ph = (
+            1.958 * reading.soil_ph + 2.843
+            if reading.soil_ph is not None
+            else None
+        )
+
+        logger.info(
+            "Soil Moisture Voltage: %.3f V",
+            reading.soil_moisture,
+        )
+
+        logger.info(
+            "Soil pH Voltage: %.3f V",
+            reading.soil_ph,
+        )
+
+        logger.info(
+            "Calibrated Soil pH: %.2f",
+            calibrated_ph,
+        )
+
+        return SensorReading(
+            soil_moisture=reading.soil_moisture,
+            soil_ph=calibrated_ph,
+            temperature=reading.temperature,
+            humidity=reading.humidity,
+            timestamp=reading.timestamp,
+        )

@@ -5,11 +5,13 @@ Used during Windows development.
 """
 
 from datetime import datetime
+from app.utils.logger import logger
 
 from app.domain.sensor_reading import SensorReading
 from app.hardware.contracts.sensor_hardware_contract import (
     SensorHardwareContract,
 )
+
 
 
 class MockSensorHardware(SensorHardwareContract):
@@ -18,6 +20,7 @@ class MockSensorHardware(SensorHardwareContract):
     """
 
     def read(self) -> SensorReading:
+        logger.debug("Using mock sensor hardware.")
 
         return SensorReading(
             soil_moisture=0.0,

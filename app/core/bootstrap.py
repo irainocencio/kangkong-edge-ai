@@ -83,7 +83,7 @@ class Bootstrap:
     def _build_sensor_service(
             self,
             hardware_provider: HardwareProviderContract,
-        ) -> SensorService:
+    ) -> SensorService:
         """
         Create the sensor service.
         """

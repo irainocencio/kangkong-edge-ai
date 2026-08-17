@@ -1,7 +1,7 @@
 """
 ADS1115 sensor hardware.
 
-Reads sensor values from the ADS1115 ADC.
+Reads raw sensor voltages from the ADS1115 ADC.
 """
 
 from datetime import datetime
@@ -21,6 +21,10 @@ from app.utils.logger import logger
 class ADS1115SensorHardware(SensorHardwareContract):
     """
     Raspberry Pi implementation for the ADS1115.
+
+    This class is responsible only for acquiring raw sensor
+    voltages from the ADC. Calibration and interpretation
+    are handled by SensorService.
     """
 
     def __init__(self) -> None:
@@ -51,17 +55,25 @@ class ADS1115SensorHardware(SensorHardwareContract):
 
     def read(self) -> SensorReading:
         """
-        Read all sensors.
+        Read the raw sensor voltages.
 
-        Temporary implementation.
+        Returns:
+            SensorReading: Raw voltage readings acquired from
+            the ADS1115. These values are not yet calibrated.
         """
 
-        moisture = self._moisture_channel.voltage
-        ph = self._ph_channel.voltage
+        moisture_voltage = self._moisture_channel.voltage
+        ph_voltage = self._ph_channel.voltage
+
+        logger.debug(
+            "Raw sensor readings | Moisture: %.3f V | pH: %.3f V",
+            moisture_voltage,
+            ph_voltage,
+        )
 
         return SensorReading(
-            soil_moisture=moisture,
-            soil_ph=ph,
+            soil_moisture=moisture_voltage,
+            soil_ph=ph_voltage,
             temperature=None,
             humidity=None,
             timestamp=datetime.now(),

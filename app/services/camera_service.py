@@ -63,7 +63,7 @@ class CameraService(CameraServiceContract):
         self._hardware.capture_image(image_path)
 
         logger.info(
-            "Image captured successfully: %s",
+            "Image capture completed.y: %s",
             image_path,
         )
 

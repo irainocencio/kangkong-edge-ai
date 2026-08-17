@@ -6,13 +6,22 @@ Responsible for preprocessing captured images.
 
 from pathlib import Path
 
-from app.contracts.preprocessing_contract import PreprocessingServiceContract
+import cv2
+
+from app.config.settings import settings
+from app.contracts.preprocessing_contract import (
+    PreprocessingServiceContract,
+)
 from app.domain.captured_image import CapturedImage
-from app.domain.preprocessing_result import PreprocessingResult
+from app.domain.preprocessing_result import (
+    PreprocessingResult,
+)
 from app.utils.logger import logger
 
 
-class PreprocessingService(PreprocessingServiceContract):
+class PreprocessingService(
+    PreprocessingServiceContract,
+):
     """
     Handles image preprocessing.
     """
@@ -22,14 +31,70 @@ class PreprocessingService(PreprocessingServiceContract):
         captured_image: CapturedImage,
     ) -> PreprocessingResult:
         """
-        Preprocess a captured image.
+        Load, resize, and save the captured image.
 
-        Placeholder implementation.
+        Returns:
+            PreprocessingResult: Information about the
+            processed image.
         """
 
         logger.info("4. Preprocessing image...")
 
+        # Ensure output directory exists
+        processed_directory = (
+            settings.storage.processed_images_directory
+        )
+
+        processed_directory.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        # Load image
+        image = cv2.imread(
+            str(captured_image.path),
+        )
+
+        if image is None:
+            raise ValueError(
+                f"Unable to load image: {captured_image.path}"
+            )
+
+        # Resize image
+        resized_image = cv2.resize(
+            image,
+            (
+                settings.camera.width,
+                settings.camera.height,
+            ),
+        )
+
+        # Generate processed filename
+        output_path = (
+            processed_directory
+            / captured_image.path.name
+        )
+
+        # Save processed image
+        cv2.imwrite(
+            str(output_path),
+            resized_image,
+        )
+
+        logger.info(
+            "Processed image saved: %s",
+            output_path,
+        )
+
         return PreprocessingResult(
-            processed_image_path=Path("processed_placeholder.jpg"),
-            metadata={},
+            processed_image_path=output_path,
+            metadata={
+                "width": str(
+                    settings.camera.width,
+                ),
+                "height": str(
+                    settings.camera.height,
+                ),
+                "format": settings.camera.image_format,
+            },
         )

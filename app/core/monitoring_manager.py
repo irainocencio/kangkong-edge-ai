@@ -59,26 +59,62 @@ class MonitoringManager:
 
         logger.info("----- Monitoring Cycle Started -----")
 
+        # ==================================================
+        # Data Acquisition
+        # ==================================================
+
         captured_image = self.camera.capture()
 
         sensor_reading = self.sensor.read()
+
+        # ==================================================
+        # Validation
+        # ==================================================
 
         validation_result = self.validation.validate(
             captured_image,
             sensor_reading,
         )
 
+        if not validation_result.is_valid:
+
+            logger.warning(
+                "Monitoring cycle aborted due to validation errors."
+            )
+
+            logger.info(
+                "----- Monitoring Cycle Aborted -----"
+            )
+
+            return
+
+        # ==================================================
+        # Preprocessing
+        # ==================================================
+
         preprocessing_result = self.preprocessing.process(
             captured_image,
         )
+
+        # ==================================================
+        # Inference
+        # ==================================================
 
         inference_result = self.inference.predict(
             preprocessing_result,
         )
 
+        # ==================================================
+        # Decision
+        # ==================================================
+
         decision_result = self.decision.evaluate(
             inference_result,
         )
+
+        # ==================================================
+        # Monitoring Result
+        # ==================================================
 
         monitoring_result = MonitoringResult(
             captured_image=captured_image,
@@ -90,10 +126,22 @@ class MonitoringManager:
             completed_at=datetime.now(),
         )
 
-        self.storage.save(monitoring_result)
+        # ==================================================
+        # Output
+        # ==================================================
 
-        self.dashboard.update(monitoring_result)
+        self.storage.save(
+            monitoring_result,
+        )
 
-        self.alert.check(monitoring_result)
+        self.dashboard.update(
+            monitoring_result,
+        )
 
-        logger.info("----- Monitoring Cycle Complete -----")
+        self.alert.check(
+            monitoring_result,
+        )
+
+        logger.info(
+            "----- Monitoring Cycle Complete -----"
+        )

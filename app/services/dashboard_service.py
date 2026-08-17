@@ -4,12 +4,16 @@ Dashboard service.
 Responsible for updating the monitoring dashboard.
 """
 
-from app.contracts.dashboard_contract import DashboardServiceContract
+from app.contracts.dashboard_contract import (
+    DashboardServiceContract,
+)
 from app.domain.monitoring_result import MonitoringResult
 from app.utils.logger import logger
 
 
-class DashboardService(DashboardServiceContract):
+class DashboardService(
+    DashboardServiceContract,
+):
     """
     Handles dashboard updates.
     """
@@ -19,9 +23,16 @@ class DashboardService(DashboardServiceContract):
         monitoring_result: MonitoringResult,
     ) -> None:
         """
-        Update the dashboard.
+        Publish the latest monitoring result.
 
-        Placeholder implementation.
+        The dashboard implementation will be added
+        during the presentation layer development.
         """
 
         logger.info("8. Updating dashboard...")
+
+        logger.debug(
+            "Dashboard update prepared for monitoring "
+            "cycle completed at %s",
+            monitoring_result.completed_at,
+        )
