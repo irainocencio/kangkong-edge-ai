@@ -5,6 +5,7 @@ Provides a mock implementation of the camera hardware for
 development and testing environments.
 """
 
+import base64
 from pathlib import Path
 
 from app.hardware.contracts.camera_hardware_contract import (
@@ -22,9 +23,17 @@ class MockCameraHardware(CameraHardwareContract):
         output_path: Path,
     ) -> None:
         """
-        Simulate capturing an image.
+        Simulate capturing a valid image.
 
-        Creates an empty placeholder file.
+        A small embedded PNG keeps the mock independent of OpenCV and
+        camera drivers while still allowing validation and preprocessing
+        to exercise the complete monitoring pipeline.
         """
 
-        output_path.touch(exist_ok=True)
+        image_bytes = base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2"
+            "AAAAFklEQVR4nGPQ2KJBEmIY1TCqYfhqAAA6YgQQV0N9"
+            "IQAAAABJRU5ErkJggg=="
+        )
+
+        output_path.write_bytes(image_bytes)

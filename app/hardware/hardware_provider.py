@@ -5,6 +5,7 @@ Selects the appropriate hardware implementations
 for the current platform.
 """
 
+import os
 import platform
 
 from app.hardware.contracts.camera_hardware_contract import (
@@ -23,6 +24,23 @@ class HardwareProvider(HardwareProviderContract):
     Factory for hardware implementations.
     """
 
+    @staticmethod
+    def _use_raspberry_pi() -> bool:
+        """Select hardware explicitly, with safe ARM Linux auto-detection."""
+
+        mode = os.getenv("KANGKONG_HARDWARE", "auto").lower()
+        if mode not in {"auto", "mock", "raspberry_pi"}:
+            raise ValueError(
+                "KANGKONG_HARDWARE must be auto, mock, or raspberry_pi"
+            )
+        if mode != "auto":
+            return mode == "raspberry_pi"
+        return platform.system() == "Linux" and platform.machine().lower() in {
+            "armv7l",
+            "aarch64",
+            "arm64",
+        }
+
     def camera(
         self,
     ) -> CameraHardwareContract:
@@ -30,9 +48,9 @@ class HardwareProvider(HardwareProviderContract):
         Return the appropriate camera implementation.
         """
 
-        if platform.system() == "Linux":
+        if self._use_raspberry_pi():
 
-            from app.hardware.raspberry_pi.pi_camera_hardware import (
+            from app.hardware.raspberry_pi.picamera2_hardware import (
                 PiCameraHardware,
             )
 
@@ -51,7 +69,7 @@ class HardwareProvider(HardwareProviderContract):
         Return the appropriate sensor implementation.
         """
 
-        if platform.system() == "Linux":
+        if self._use_raspberry_pi():
 
             from app.hardware.raspberry_pi.ads1115_sensor_hardware import (
                 ADS1115SensorHardware,

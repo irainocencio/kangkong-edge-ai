@@ -1,5 +1,6 @@
 # Virtual Environment
 .venv/
+venv/
 
 # Python
 __pycache__/
@@ -7,6 +8,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.egg-info/
+.pytest_cache/
 
 # VS Code
 .vscode/
@@ -14,8 +16,12 @@ __pycache__/
 # Environment Variables
 .env
 
-# Logs
+# Logs and runtime data
 logs/
+database/*.db
+datasets/processed/
+datasets/results/
+datasets/raw/image_*.jpg
 
 # OS
 .DS_Store

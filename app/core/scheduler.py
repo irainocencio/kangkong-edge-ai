@@ -4,6 +4,10 @@ Scheduler module.
 Responsible for triggering monitoring cycles.
 """
 
+import time
+
+from app.config.settings import settings
+
 from app.utils.logger import logger
 
 
@@ -23,11 +27,7 @@ class Scheduler:
 
     def run(self):
         """
-        Execute one scheduled monitoring cycle.
-
-        This is currently a placeholder implementation.
-        Future versions will execute according to the
-        configured monitoring interval.
+        Execute one monitoring cycle.
         """
 
         logger.info("Scheduler started.")
@@ -35,3 +35,20 @@ class Scheduler:
         self.monitoring_manager.run_cycle()
 
         logger.info("Scheduler finished.")
+
+    def run_forever(self) -> None:
+        """Run monitoring cycles at the configured interval until interrupted."""
+
+        interval_seconds = settings.monitoring.interval_minutes * 60
+        logger.info(
+            "Continuous scheduler started (interval: %s minute(s)).",
+            settings.monitoring.interval_minutes,
+        )
+        while True:
+            started_at = time.monotonic()
+            try:
+                self.monitoring_manager.run_cycle()
+            except Exception:
+                logger.exception("Monitoring cycle failed; the scheduler will continue.")
+            elapsed = time.monotonic() - started_at
+            time.sleep(max(0.0, interval_seconds - elapsed))
