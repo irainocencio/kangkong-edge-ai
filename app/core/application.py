@@ -23,13 +23,19 @@ class Application:
         self.lifecycle = lifecycle
         self.scheduler = scheduler
 
-    def run(self):
+    def run(self, continuous: bool = False):
         """
         Execute the application.
         """
 
         self.lifecycle.startup()
 
-        self.scheduler.run()
-
-        self.lifecycle.shutdown()
+        try:
+            if continuous:
+                self.scheduler.run_forever()
+            else:
+                self.scheduler.run()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.lifecycle.shutdown()
