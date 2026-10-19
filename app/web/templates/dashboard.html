@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kangkong Monitoring Dashboard</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='dashboard.css') }}"
+    >
+</head>
+<body>
+    <header>
+        <h1>Kangkong Monitoring System</h1>
+        <p>Edge AI Plant Health Monitoring</p>
+        <p>
+            Connection:
+            <span id="connection-status">Connecting...</span>
+        </p>
+        <p>Last updated: <span id="last-updated">—</span></p>
+    </header>
+
+    <main>
+        <div class="dashboard-grid">
+            <section class="panel">
+                <h2>Plant Health Status</h2>
+                <p>
+                    <span class="status status-neutral" id="health-status">
+                        Loading...
+                    </span>
+                </p>
+                <p class="reason">
+                    <strong>Decision reason:</strong>
+                    <span id="decision-reason">—</span>
+                </p>
+                <p>
+                    <strong>Alert:</strong>
+                    <span class="status status-neutral" id="alert-status">—</span>
+                </p>
+            </section>
+
+            <section class="panel">
+                <h2>Model Inference</h2>
+                <p class="prediction" id="prediction">Loading...</p>
+                <div class="reading-list">
+                    <div class="reading">
+                        <span class="reading-label">Confidence</span>
+                        <span class="reading-value" id="confidence">—</span>
+                    </div>
+                    <div class="reading">
+                        <span class="reading-label">Model version</span>
+                        <span class="reading-value" id="model-version">—</span>
+                    </div>
+                    <div class="reading">
+                        <span class="reading-label">Inference time</span>
+                        <span class="reading-value" id="inference-timestamp">—</span>
+                    </div>
+                </div>
+                <div class="model-notice">
+                    <strong>Baseline model</strong>
+                    <p>
+                        This result comes from a color-based HSV baseline.
+                        Its reported confidence is not a measure of validated
+                        nitrogen-deficiency detection accuracy.
+                    </p>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>Plant Image</h2>
+                <div id="image-container">
+                    <img
+                        id="plant-image"
+                        class="plant-image"
+                        src="/plant-image"
+                        alt="Latest processed kangkong plant image"
+                    >
+                </div>
+                <p class="metadata">
+                    Dimensions: <span id="image-dimensions">—</span>
+                </p>
+                <p class="metadata">
+                    Image path: <span id="image-path">—</span>
+                </p>
+            </section>
+
+            <section class="panel">
+                <h2>Sensor Readings</h2>
+                <div class="reading-list">
+                    <div class="reading">
+                        <span class="reading-label">Soil moisture (raw)</span>
+                        <span class="reading-value" id="soil-moisture">—</span>
+                    </div>
+                    <div class="reading">
+                        <span class="reading-label">Soil pH</span>
+                        <span class="reading-value" id="soil-ph">—</span>
+                    </div>
+                    <div class="reading">
+                        <span class="reading-label">Temperature</span>
+                        <span class="reading-value" id="temperature">—</span>
+                    </div>
+                    <div class="reading">
+                        <span class="reading-label">Humidity</span>
+                        <span class="reading-value" id="humidity">—</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        Kangkong Edge AI Monitoring System
+    </footer>
+
+    <script>
+        function displayValue(value, suffix = "") {
+            if (value === null || value === undefined || value === "") {
+                return "Not available";
+            }
+
+            return `${value}${suffix}`;
+        }
+
+        function setText(id, value) {
+            document.getElementById(id).textContent = value;
+        }
+
+        function setStatus(id, label, statusClass) {
+            const element = document.getElementById(id);
+
+            element.className = `status ${statusClass}`;
+            element.replaceChildren();
+
+            const dot = document.createElement("span");
+            dot.className = "status-dot";
+            dot.setAttribute("aria-hidden", "true");
+
+            const text = document.createElement("span");
+            text.textContent = label;
+
+            element.append(dot, text);
+        }
+
+        async function refreshDashboard() {
+            try {
+                const response = await fetch("/api/latest", {
+                    cache: "no-store"
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                const image = result.captured_image || {};
+                const sensor = result.sensor_reading || {};
+                const inference = result.inference || {};
+                const decision = result.decision || {};
+
+                setText("connection-status", "Connected");
+                setText("last-updated", displayValue(result.completed_at));
+
+                const healthStatus = decision.health_status;
+
+                if (healthStatus === "Healthy") {
+                    setStatus("health-status", "Healthy", "status-healthy");
+                } else if (
+                    typeof healthStatus === "string" &&
+                    healthStatus.toLowerCase().includes("alert")
+                ) {
+                    setStatus("health-status", healthStatus, "status-danger");
+                } else if (
+                    typeof healthStatus === "string" &&
+                    healthStatus.toLowerCase().includes("warning")
+                ) {
+                    setStatus("health-status", healthStatus, "status-warning");
+                } else if (
+                    typeof healthStatus === "string" &&
+                    healthStatus.length > 0
+                ) {
+                    setStatus("health-status", healthStatus, "status-neutral");
+                } else {
+                    setStatus(
+                        "health-status",
+                        "Not available",
+                        "status-neutral"
+                    );
+                }
+
+                setText("decision-reason", displayValue(decision.reason));
+
+                if (decision.should_alert === true) {
+                    setStatus(
+                        "alert-status",
+                        "Alert required",
+                        "status-danger"
+                    );
+                } else if (decision.should_alert === false) {
+                    setStatus("alert-status", "No alert", "status-healthy");
+                } else {
+                    setStatus(
+                        "alert-status",
+                        "Not available",
+                        "status-neutral"
+                    );
+                }
+
+                setText("prediction", displayValue(inference.prediction));
+                setText(
+                    "confidence",
+                    typeof inference.confidence === "number"
+                        ? `${(inference.confidence * 100).toFixed(1)}%`
+                        : "Not available"
+                );
+                setText("model-version", displayValue(inference.model_version));
+                setText(
+                    "inference-timestamp",
+                    displayValue(inference.timestamp)
+                );
+
+                setText("image-path", displayValue(image.path));
+                setText(
+                    "image-dimensions",
+                    image.width && image.height
+                        ? `${image.width} × ${image.height}`
+                        : "Not available"
+                );
+
+                const plantImage = document.getElementById("plant-image");
+                plantImage.src = `/plant-image?t=${Date.now()}`;
+
+                setText("soil-moisture", displayValue(sensor.soil_moisture));
+                setText("soil-ph", displayValue(sensor.soil_ph));
+                setText(
+                    "temperature",
+                    displayValue(sensor.temperature, " °C")
+                );
+                setText("humidity", displayValue(sensor.humidity, " %"));
+            } catch (error) {
+                setText("connection-status", "Unavailable");
+                console.error("Could not refresh dashboard:", error);
+            }
+        }
+
+        refreshDashboard();
+        setInterval(refreshDashboard, 5000);
+    </script>
+</body>
+</html>
