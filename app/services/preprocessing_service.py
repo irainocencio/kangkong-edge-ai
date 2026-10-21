@@ -76,10 +76,15 @@ class PreprocessingService(
         )
 
         # Save processed image
-        cv2.imwrite(
+        saved = cv2.imwrite(
             str(output_path),
             resized_image,
         )
+
+        if not saved:
+            raise OSError(
+                f"Unable to save processed image: {output_path}"
+            )
 
         logger.info(
             "Processed image saved: %s",
