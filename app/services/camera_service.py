@@ -6,6 +6,8 @@ Responsible for capturing images.
 
 from datetime import datetime
 
+import cv2
+
 from app.config.settings import settings
 from app.contracts.camera_contract import CameraServiceContract
 from app.domain.captured_image import CapturedImage
@@ -62,6 +64,15 @@ class CameraService(CameraServiceContract):
         # Capture the image using the hardware implementation
         self._hardware.capture_image(image_path)
 
+        # Read actual image dimensions
+        image = cv2.imread(str(image_path))
+        if image is None:
+            raise ValueError(
+                f"Unable to load captured image: {image_path}"
+            )
+
+        height, width = image.shape[:2]
+
         logger.info(
             "Image capture completed: %s",
             image_path,
@@ -71,6 +82,6 @@ class CameraService(CameraServiceContract):
         return CapturedImage(
             path=image_path,
             timestamp=timestamp,
-            width=settings.camera.width,
-            height=settings.camera.height,
+            width=width,
+            height=height,
         )
