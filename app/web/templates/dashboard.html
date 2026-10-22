@@ -95,14 +95,6 @@
                         <span class="reading-label">Soil pH</span>
                         <span class="reading-value" id="soil-ph">—</span>
                     </div>
-                    <div class="reading">
-                        <span class="reading-label">Temperature</span>
-                        <span class="reading-value" id="temperature">—</span>
-                    </div>
-                    <div class="reading">
-                        <span class="reading-label">Humidity</span>
-                        <span class="reading-value" id="humidity">—</span>
-                    </div>
                 </div>
             </section>
         </div>
@@ -206,12 +198,14 @@
                 }
 
                 setText("prediction", displayValue(inference.prediction));
+
                 setText(
                     "confidence",
                     typeof inference.confidence === "number"
                         ? `${(inference.confidence * 100).toFixed(1)}%`
                         : "Not available"
                 );
+
                 setText("model-version", displayValue(inference.model_version));
                 setText(
                     "inference-timestamp",
@@ -219,6 +213,7 @@
                 );
 
                 setText("image-path", displayValue(image.path));
+
                 setText(
                     "image-dimensions",
                     image.width && image.height
@@ -229,13 +224,15 @@
                 const plantImage = document.getElementById("plant-image");
                 plantImage.src = `/plant-image?t=${Date.now()}`;
 
-                setText("soil-moisture", displayValue(sensor.soil_moisture));
-                setText("soil-ph", displayValue(sensor.soil_ph));
                 setText(
-                    "temperature",
-                    displayValue(sensor.temperature, " °C")
+                    "soil-moisture",
+                    displayValue(sensor.soil_moisture)
                 );
-                setText("humidity", displayValue(sensor.humidity, " %"));
+
+                setText(
+                    "soil-ph",
+                    displayValue(sensor.soil_ph)
+                );
             } catch (error) {
                 setText("connection-status", "Unavailable");
                 console.error("Could not refresh dashboard:", error);
