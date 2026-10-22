@@ -1,8 +1,11 @@
+
 """
 Validation service.
 
 Responsible for validating monitoring inputs.
 """
+
+import cv2
 
 from app.contracts.validation_contract import ValidationServiceContract
 from app.domain.captured_image import CapturedImage
@@ -48,6 +51,14 @@ class ValidationService(ValidationServiceContract):
                 "Captured image is empty."
             )
 
+        else:
+            image = cv2.imread(str(captured_image.path))
+
+            if image is None:
+                errors.append(
+                    "Captured image is not a valid image."
+                )
+
         # ==================================================
         # Sensor Validation
         # ==================================================
@@ -67,7 +78,6 @@ class ValidationService(ValidationServiceContract):
         # ==================================================
 
         if errors:
-
             logger.warning(
                 "Validation failed with %d error(s).",
                 len(errors),
