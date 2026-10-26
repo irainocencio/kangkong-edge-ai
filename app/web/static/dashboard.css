@@ -1,3 +1,4 @@
+
 :root {
     font-family: "Segoe UI", Arial, sans-serif;
     color: #1f2937;
@@ -68,12 +69,44 @@ main {
 .status {
     display: inline-flex;
     align-items: center;
-    padding: 7px 12px;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid transparent;
     border-radius: 999px;
-    background: var(--green-100);
-    color: var(--green-900);
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: 700;
+}
+
+.status-healthy {
+    color: #166534;
+    background: #dcfce7;
+    border-color: #bbf7d0;
+}
+
+.status-warning {
+    color: #92400e;
+    background: #fef3c7;
+    border-color: #fde68a;
+}
+
+.status-danger {
+    color: #991b1b;
+    background: #fee2e2;
+    border-color: #fecaca;
+}
+
+.status-neutral {
+    color: #374151;
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 8px;
+    border-radius: 50%;
+    background: currentColor;
 }
 
 .reading-list {
@@ -144,11 +177,108 @@ main {
     overflow-wrap: anywhere;
 }
 
+.model-notice {
+    margin-top: 16px;
+    padding: 12px;
+    color: #374151;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
 footer {
     padding: 20px;
     color: var(--muted);
     text-align: center;
     font-size: 0.875rem;
+}
+
+/* Manual monitoring controls */
+
+.monitoring-panel {
+    margin-bottom: 20px;
+}
+
+.monitoring-panel > p {
+    line-height: 1.6;
+}
+
+.monitoring-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.primary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 18px;
+    color: #ffffff;
+    background: var(--green-700);
+    border: 1px solid var(--green-700);
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.primary-button:hover:not(:disabled) {
+    background: var(--green-900);
+}
+
+.primary-button:focus-visible {
+    outline: 3px solid #86efac;
+    outline-offset: 3px;
+}
+
+.primary-button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.monitoring-message {
+    margin: 16px 0 0;
+    color: var(--muted);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.status-running {
+    color: #1d4ed8;
+    background: #dbeafe;
+    border-color: #bfdbfe;
+}
+
+.status-running .status-dot {
+    animation: monitoring-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes monitoring-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .status-running .status-dot {
+        animation: none;
+    }
+
+    .primary-button {
+        transition: none;
+    }
 }
 
 @media (max-width: 700px) {
@@ -169,59 +299,17 @@ footer {
     }
 }
 
+@media (max-width: 500px) {
+    .monitoring-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
 
-/* Dynamic monitoring status indicators */
+    .primary-button {
+        width: 100%;
+    }
 
-.status {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    font-size: 0.875rem;
-    font-weight: 700;
-}
-
-.status-healthy {
-    color: #166534;
-    background: #dcfce7;
-    border-color: #bbf7d0;
-}
-
-.status-warning {
-    color: #92400e;
-    background: #fef3c7;
-    border-color: #fde68a;
-}
-
-.status-danger {
-    color: #991b1b;
-    background: #fee2e2;
-    border-color: #fecaca;
-}
-
-.status-neutral {
-    color: #374151;
-    background: #f3f4f6;
-    border-color: #e5e7eb;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    flex: 0 0 8px;
-    border-radius: 50%;
-    background: currentColor;
-}
-
-.model-notice {
-    margin-top: 16px;
-    padding: 12px;
-    color: #374151;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    font-size: 0.875rem;
-    line-height: 1.5;
+    .monitoring-controls .status {
+        align-self: flex-start;
+    }
 }

@@ -1,3 +1,4 @@
+
 """
 Monitoring manager.
 
@@ -52,9 +53,16 @@ class MonitoringManager:
         self.dashboard = dashboard_service
         self.alert = alert_service
 
-    def run_cycle(self) -> None:
+    def run_cycle(self) -> bool:
         """
         Execute one monitoring cycle.
+
+        Returns:
+            True: The monitoring cycle completed successfully.
+            False: Validation errors prevented the cycle from continuing.
+
+        Raises:
+            Exceptions from services are allowed to propagate to the caller.
         """
 
         logger.info("----- Monitoring Cycle Started -----")
@@ -86,7 +94,7 @@ class MonitoringManager:
                 "----- Monitoring Cycle Aborted -----"
             )
 
-            return
+            return False
 
         # ==================================================
         # Preprocessing
@@ -145,3 +153,5 @@ class MonitoringManager:
         logger.info(
             "----- Monitoring Cycle Complete -----"
         )
+
+        return True

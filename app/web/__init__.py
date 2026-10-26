@@ -1,14 +1,25 @@
+
 import json
 from pathlib import Path
+from typing import Any
 
 from flask import Flask, jsonify, render_template, send_file
 
 from app.config.settings import settings
 
 
-def create_app() -> Flask:
+def create_app(application: Any = None) -> Flask:
     """Create and configure the dashboard web application."""
+
+    if application is None:
+        from app.core.bootstrap import Bootstrap
+
+        application = Bootstrap().build()
+
     app = Flask(__name__)
+    app.extensions["kangkong_application"] = application
+
+    monitoring_controller = application.monitoring_controller
 
     latest_result_path = (
         settings.storage.results_directory / "latest.json"
@@ -97,5 +108,20 @@ def create_app() -> Flask:
             return jsonify({
                 "error": "The processed image could not be read."
             }), 500
+
+    @app.get("/api/monitoring/status")
+    def monitoring_status():
+        """Return the current monitoring-cycle status."""
+        return jsonify(monitoring_controller.get_status())
+
+    @app.post("/api/monitoring/run")
+    def run_monitoring():
+        """Request a monitoring cycle in the background."""
+        accepted, status = monitoring_controller.start_cycle()
+
+        if accepted:
+            return jsonify(status), 202
+
+        return jsonify(status), 409
 
     return app

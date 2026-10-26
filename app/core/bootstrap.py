@@ -5,10 +5,13 @@ Responsible for constructing and wiring the application's
 core components before execution.
 """
 
+from threading import Lock
+
 from app.config.settings import ApplicationSettings, settings
 
 from app.core.application import Application
 from app.core.lifecycle import Lifecycle
+from app.core.monitoring_controller import MonitoringController
 from app.core.monitoring_manager import MonitoringManager
 from app.core.scheduler import Scheduler
 
@@ -29,15 +32,10 @@ from app.services.validation_service import ValidationService
 
 
 class Bootstrap:
-    """
-    Builds and initializes the application's dependencies.
-    """
+    """Builds and wires the application's dependencies."""
 
     def __init__(self) -> None:
-        """
-        Initialize the bootstrap process.
-        """
-
+        """Initialize the bootstrap process."""
         self._settings: ApplicationSettings = settings
 
     # ==================================================
@@ -45,11 +43,12 @@ class Bootstrap:
     # ==================================================
 
     def _build_lifecycle(self) -> Lifecycle:
-        """
-        Create the application lifecycle manager.
-        """
-
+        """Create the application lifecycle manager."""
         return Lifecycle()
+
+    def _build_execution_lock(self) -> Lock:
+        """Create the lock shared by monitoring triggers."""
+        return Lock()
 
     # ==================================================
     # Hardware
@@ -58,10 +57,7 @@ class Bootstrap:
     def _build_hardware_provider(
         self,
     ) -> HardwareProviderContract:
-        """
-        Create the hardware provider.
-        """
-
+        """Create the hardware provider."""
         return HardwareProvider()
 
     # ==================================================
@@ -72,73 +68,42 @@ class Bootstrap:
         self,
         hardware_provider: HardwareProviderContract,
     ) -> CameraService:
-        """
-        Create the camera service.
-        """
-
-        return CameraService(
-            hardware=hardware_provider.camera(),
-        )
+        """Create the camera service."""
+        return CameraService(hardware=hardware_provider.camera())
 
     def _build_sensor_service(
-            self,
-            hardware_provider: HardwareProviderContract,
+        self,
+        hardware_provider: HardwareProviderContract,
     ) -> SensorService:
-        """
-        Create the sensor service.
-        """
-
-        return SensorService(
-            hardware=hardware_provider.sensor(),
-        )
+        """Create the sensor service."""
+        return SensorService(hardware=hardware_provider.sensor())
 
     def _build_validation_service(self) -> ValidationService:
-        """
-        Create the validation service.
-        """
-
+        """Create the validation service."""
         return ValidationService()
 
     def _build_preprocessing_service(self) -> PreprocessingService:
-        """
-        Create the preprocessing service.
-        """
-
+        """Create the preprocessing service."""
         return PreprocessingService()
 
     def _build_inference_service(self) -> InferenceService:
-        """
-        Create the inference service.
-        """
-
+        """Create the inference service."""
         return InferenceService()
 
     def _build_decision_service(self) -> DecisionService:
-        """
-        Create the decision service.
-        """
-
+        """Create the decision service."""
         return DecisionService()
 
     def _build_storage_service(self) -> StorageService:
-        """
-        Create the storage service.
-        """
-
+        """Create the storage service."""
         return StorageService()
 
     def _build_dashboard_service(self) -> DashboardService:
-        """
-        Create the dashboard service.
-        """
-
+        """Create the dashboard service."""
         return DashboardService()
 
     def _build_alert_service(self) -> AlertService:
-        """
-        Create the alert service.
-        """
-
+        """Create the alert service."""
         return AlertService()
 
     # ==================================================
@@ -157,10 +122,7 @@ class Bootstrap:
         dashboard_service: DashboardService,
         alert_service: AlertService,
     ) -> MonitoringManager:
-        """
-        Create the monitoring manager.
-        """
-
+        """Create the monitoring manager."""
         return MonitoringManager(
             camera_service=camera_service,
             sensor_service=sensor_service,
@@ -176,27 +138,38 @@ class Bootstrap:
     def _build_scheduler(
         self,
         monitoring_manager: MonitoringManager,
+        execution_lock: Lock,
     ) -> Scheduler:
-        """
-        Create the scheduler.
-        """
-
+        """Create the scheduler."""
         return Scheduler(
             monitoring_manager=monitoring_manager,
+            execution_lock=execution_lock,
+        )
+
+    def _build_monitoring_controller(
+        self,
+        monitoring_manager: MonitoringManager,
+        execution_lock: Lock,
+    ) -> MonitoringController:
+        """Create the manual monitoring controller."""
+        return MonitoringController(
+            monitoring_manager=monitoring_manager,
+            execution_lock=execution_lock,
         )
 
     def _build_application(
         self,
         lifecycle: Lifecycle,
         scheduler: Scheduler,
+        monitoring_manager: MonitoringManager,
+        monitoring_controller: MonitoringController,
     ) -> Application:
-        """
-        Create the application.
-        """
-
+        """Create the application."""
         return Application(
             lifecycle=lifecycle,
             scheduler=scheduler,
+            monitoring_manager=monitoring_manager,
+            monitoring_controller=monitoring_controller,
         )
 
     # ==================================================
@@ -204,37 +177,24 @@ class Bootstrap:
     # ==================================================
 
     def build(self) -> Application:
-        """
-        Build and wire all application components.
-        """
+        """Build and wire all application components."""
 
         # Infrastructure
         lifecycle = self._build_lifecycle()
+        execution_lock = self._build_execution_lock()
 
         # Hardware
         hardware_provider = self._build_hardware_provider()
 
         # Services
-        camera_service = self._build_camera_service(
-            hardware_provider=hardware_provider,
-        )
-
-        sensor_service = self._build_sensor_service(
-            hardware_provider=hardware_provider,
-        )
-
+        camera_service = self._build_camera_service(hardware_provider)
+        sensor_service = self._build_sensor_service(hardware_provider)
         validation_service = self._build_validation_service()
-
         preprocessing_service = self._build_preprocessing_service()
-
         inference_service = self._build_inference_service()
-
         decision_service = self._build_decision_service()
-
         storage_service = self._build_storage_service()
-
         dashboard_service = self._build_dashboard_service()
-
         alert_service = self._build_alert_service()
 
         # Core Components
@@ -252,11 +212,18 @@ class Bootstrap:
 
         scheduler = self._build_scheduler(
             monitoring_manager=monitoring_manager,
+            execution_lock=execution_lock,
         )
 
-        application = self._build_application(
+        monitoring_controller = self._build_monitoring_controller(
+            monitoring_manager=monitoring_manager,
+            execution_lock=execution_lock,
+        )
+
+        return self._build_application(
             lifecycle=lifecycle,
             scheduler=scheduler,
+            monitoring_manager=monitoring_manager,
+            monitoring_controller=monitoring_controller,
         )
-
-        return application
+    

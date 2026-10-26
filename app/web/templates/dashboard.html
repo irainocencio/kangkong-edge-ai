@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,11 +22,50 @@
     </header>
 
     <main>
+        <section class="panel monitoring-panel">
+            <h2>Manual Monitoring</h2>
+            <p>
+                Start a monitoring cycle to capture the plant image,
+                read the sensors, and run the existing analysis pipeline.
+            </p>
+
+            <div class="monitoring-controls">
+                <button
+                    type="button"
+                    id="run-monitoring-button"
+                    class="primary-button"
+                >
+                    Run Monitoring Cycle
+                </button>
+
+                <span
+                    id="monitoring-status"
+                    class="status status-neutral"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span id="monitoring-status-label">Idle</span>
+                </span>
+            </div>
+
+            <p
+                id="monitoring-message"
+                class="monitoring-message"
+                aria-live="polite"
+            >
+                No monitoring cycle has been started.
+            </p>
+        </section>
+
         <div class="dashboard-grid">
             <section class="panel">
                 <h2>Plant Health Status</h2>
                 <p>
-                    <span class="status status-neutral" id="health-status">
+                    <span
+                        class="status status-neutral"
+                        id="health-status"
+                    >
                         Loading...
                     </span>
                 </p>
@@ -35,13 +75,17 @@
                 </p>
                 <p>
                     <strong>Alert:</strong>
-                    <span class="status status-neutral" id="alert-status">—</span>
+                    <span
+                        class="status status-neutral"
+                        id="alert-status"
+                    >—</span>
                 </p>
             </section>
 
             <section class="panel">
                 <h2>Model Inference</h2>
                 <p class="prediction" id="prediction">Loading...</p>
+
                 <div class="reading-list">
                     <div class="reading">
                         <span class="reading-label">Confidence</span>
@@ -53,9 +97,13 @@
                     </div>
                     <div class="reading">
                         <span class="reading-label">Inference time</span>
-                        <span class="reading-value" id="inference-timestamp">—</span>
+                        <span
+                            class="reading-value"
+                            id="inference-timestamp"
+                        >—</span>
                     </div>
                 </div>
+
                 <div class="model-notice">
                     <strong>Baseline model</strong>
                     <p>
@@ -72,7 +120,7 @@
                     <img
                         id="plant-image"
                         class="plant-image"
-                        src="/plant-image"
+                        src="{{ url_for('plant_image') }}"
                         alt="Latest processed kangkong plant image"
                     >
                 </div>
@@ -105,6 +153,20 @@
     </footer>
 
     <script>
+        const runButton = document.getElementById("run-monitoring-button");
+
+        const statusLabels = {
+            idle: "Idle",
+            running: "Running",
+            completed: "Completed",
+            aborted: "Aborted",
+            failed: "Failed",
+            busy: "Busy"
+        };
+
+        let previousMonitoringState = null;
+        let monitoringRequestInProgress = false;
+
         function displayValue(value, suffix = "") {
             if (value === null || value === undefined || value === "") {
                 return "Not available";
@@ -131,6 +193,123 @@
             text.textContent = label;
 
             element.append(dot, text);
+        }
+
+        function monitoringStatusClass(state) {
+            switch (state) {
+                case "completed":
+                    return "status-healthy";
+                case "aborted":
+                case "busy":
+                    return "status-warning";
+                case "failed":
+                    return "status-danger";
+                default:
+                    return "status-neutral";
+            }
+        }
+
+        function updateMonitoringUI(status) {
+            const state = status.state || "idle";
+            const label = statusLabels[state] || state;
+
+            setStatus(
+                "monitoring-status",
+                label,
+                state === "running"
+                    ? "status-running"
+                    : monitoringStatusClass(state)
+            );
+
+            setText(
+                "monitoring-message",
+                status.message || "Monitoring status unavailable."
+            );
+
+            const isRunning = state === "running";
+
+            // Disable the button while a cycle is running or the
+            // initial request is still being submitted.
+            runButton.disabled =
+                isRunning || monitoringRequestInProgress;
+
+            runButton.textContent = isRunning
+                ? "Monitoring in Progress..."
+                : "Run Monitoring Cycle";
+
+            if (
+                previousMonitoringState === "running" &&
+                ["completed", "aborted", "failed"].includes(state)
+            ) {
+                refreshDashboard();
+            }
+
+            previousMonitoringState = state;
+        }
+
+        async function refreshMonitoringStatus() {
+            try {
+                const response = await fetch("/api/monitoring/status", {
+                    cache: "no-store"
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const status = await response.json();
+                updateMonitoringUI(status);
+            } catch (error) {
+                setText(
+                    "monitoring-message",
+                    "Could not retrieve monitoring status. Check the server connection."
+                );
+                console.error("Could not retrieve monitoring status:", error);
+            }
+        }
+
+        async function startMonitoringCycle() {
+            if (monitoringRequestInProgress || runButton.disabled) {
+                return;
+            }
+
+            monitoringRequestInProgress = true;
+            runButton.disabled = true;
+            runButton.textContent = "Starting...";
+            setText(
+                "monitoring-message",
+                "Submitting monitoring request..."
+            );
+
+            try {
+                const response = await fetch("/api/monitoring/run", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                const status = await response.json();
+
+                if (!response.ok) {
+                    updateMonitoringUI(status);
+                    return;
+                }
+
+                updateMonitoringUI(status);
+            } catch (error) {
+                setText(
+                    "monitoring-message",
+                    "Could not start monitoring. Check the server connection and try again."
+                );
+                console.error("Could not start monitoring:", error);
+            } finally {
+                monitoringRequestInProgress = false;
+
+                // Re-read the backend's current state after releasing
+                // the request guard, so a completed cycle unlocks the button.
+                await refreshMonitoringStatus();
+            }
         }
 
         async function refreshDashboard() {
@@ -160,17 +339,29 @@
                     typeof healthStatus === "string" &&
                     healthStatus.toLowerCase().includes("alert")
                 ) {
-                    setStatus("health-status", healthStatus, "status-danger");
+                    setStatus(
+                        "health-status",
+                        healthStatus,
+                        "status-danger"
+                    );
                 } else if (
                     typeof healthStatus === "string" &&
                     healthStatus.toLowerCase().includes("warning")
                 ) {
-                    setStatus("health-status", healthStatus, "status-warning");
+                    setStatus(
+                        "health-status",
+                        healthStatus,
+                        "status-warning"
+                    );
                 } else if (
                     typeof healthStatus === "string" &&
                     healthStatus.length > 0
                 ) {
-                    setStatus("health-status", healthStatus, "status-neutral");
+                    setStatus(
+                        "health-status",
+                        healthStatus,
+                        "status-neutral"
+                    );
                 } else {
                     setStatus(
                         "health-status",
@@ -206,7 +397,11 @@
                         : "Not available"
                 );
 
-                setText("model-version", displayValue(inference.model_version));
+                setText(
+                    "model-version",
+                    displayValue(inference.model_version)
+                );
+
                 setText(
                     "inference-timestamp",
                     displayValue(inference.timestamp)
@@ -222,25 +417,29 @@
                 );
 
                 const plantImage = document.getElementById("plant-image");
-                plantImage.src = `/plant-image?t=${Date.now()}`;
+                plantImage.src =
+                    "{{ url_for('plant_image') }}" + `?t=${Date.now()}`;
 
                 setText(
                     "soil-moisture",
                     displayValue(sensor.soil_moisture)
                 );
 
-                setText(
-                    "soil-ph",
-                    displayValue(sensor.soil_ph)
-                );
+                setText("soil-ph", displayValue(sensor.soil_ph));
+                setText("connection-status", "Connected");
             } catch (error) {
                 setText("connection-status", "Unavailable");
                 console.error("Could not refresh dashboard:", error);
             }
         }
 
+        runButton.addEventListener("click", startMonitoringCycle);
+
         refreshDashboard();
+        refreshMonitoringStatus();
+
         setInterval(refreshDashboard, 5000);
+        setInterval(refreshMonitoringStatus, 1500);
     </script>
 </body>
 </html>
