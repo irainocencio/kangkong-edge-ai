@@ -56,7 +56,7 @@ class InferenceService(InferenceServiceContract):
         yellow_ratio = cv2.countNonZero(yellow) / pixel_count
         vegetation_ratio = green_ratio + yellow_ratio
 
-        if vegetation_ratio < 0.05:
+        if vegetation_ratio < 0.02:
             prediction = PlantHealthStatus.UNKNOWN
             confidence = min(1.0, (0.05 - vegetation_ratio) / 0.05)
         else:
