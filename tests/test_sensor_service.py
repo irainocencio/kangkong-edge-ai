@@ -43,3 +43,60 @@ def test_sensor_service_calibrates_ph(raw_ph, expected_ph):
         assert result.soil_ph is None
     else:
         assert result.soil_ph == pytest.approx(expected_ph)
+
+def test_sensor_service_preserves_raw_ph_voltage():
+    hardware = MockSensorHardware(1.92)
+    service = SensorService(hardware)
+
+    result = service.read()
+
+    assert result.soil_ph_raw_voltage == pytest.approx(1.92)
+
+
+def test_sensor_service_calibrates_ph_within_range():
+    hardware = MockSensorHardware(1.92)
+    service = SensorService(hardware)
+
+    result = service.read()
+
+    assert result.soil_ph == pytest.approx(
+        1.958 * 1.92 + 2.843
+    )
+    assert result.soil_ph_calibration_valid is True
+
+
+def test_sensor_service_flags_ph_voltage_above_calibration_range():
+    hardware = MockSensorHardware(3.50)
+    service = SensorService(hardware)
+
+    result = service.read()
+
+    assert result.soil_ph_raw_voltage == pytest.approx(3.50)
+    assert result.soil_ph_calibration_valid is False
+    assert result.soil_ph is not None
+
+
+@pytest.mark.parametrize(
+    ("voltage", "expected_level"),
+    [
+        (2.50, "Air / sensor exposed"),
+        (1.68, "Dry"),
+        (1.03, "Moderate"),
+        (0.92, "Wet / saturated"),
+        (None, None),
+    ],
+)
+def test_sensor_service_classifies_moisture(voltage, expected_level):
+    hardware = MockSensorHardware(1.92)
+    hardware.read = lambda: SensorReading(
+        soil_moisture=voltage,
+        soil_ph=1.92,
+        temperature=None,
+        humidity=None,
+        timestamp=datetime.now(),
+    )
+    service = SensorService(hardware)
+
+    result = service.read()
+
+    assert result.soil_moisture_level == expected_level

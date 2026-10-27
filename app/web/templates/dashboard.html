@@ -59,8 +59,10 @@
         </section>
 
         <div class="dashboard-grid">
+            <!-- Plant health -->
             <section class="panel">
                 <h2>Plant Health Status</h2>
+
                 <p>
                     <span
                         class="status status-neutral"
@@ -69,10 +71,12 @@
                         Loading...
                     </span>
                 </p>
+
                 <p class="reason">
                     <strong>Decision reason:</strong>
                     <span id="decision-reason">—</span>
                 </p>
+
                 <p>
                     <strong>Alert:</strong>
                     <span
@@ -82,6 +86,7 @@
                 </p>
             </section>
 
+            <!-- Model inference -->
             <section class="panel">
                 <h2>Model Inference</h2>
                 <p class="prediction" id="prediction">Loading...</p>
@@ -91,10 +96,12 @@
                         <span class="reading-label">Confidence</span>
                         <span class="reading-value" id="confidence">—</span>
                     </div>
+
                     <div class="reading">
                         <span class="reading-label">Model version</span>
                         <span class="reading-value" id="model-version">—</span>
                     </div>
+
                     <div class="reading">
                         <span class="reading-label">Inference time</span>
                         <span
@@ -114,8 +121,10 @@
                 </div>
             </section>
 
+            <!-- Plant image -->
             <section class="panel">
                 <h2>Plant Image</h2>
+
                 <div id="image-container">
                     <img
                         id="plant-image"
@@ -124,26 +133,89 @@
                         alt="Latest processed kangkong plant image"
                     >
                 </div>
+
                 <p class="metadata">
-                    Dimensions: <span id="image-dimensions">—</span>
+                    Dimensions:
+                    <span id="image-dimensions">—</span>
                 </p>
+
                 <p class="metadata">
-                    Image path: <span id="image-path">—</span>
+                    Image path:
+                    <span id="image-path">—</span>
                 </p>
             </section>
 
+            <!-- Sensor readings -->
             <section class="panel">
                 <h2>Sensor Readings</h2>
+
                 <div class="reading-list">
                     <div class="reading">
-                        <span class="reading-label">Soil moisture (raw)</span>
-                        <span class="reading-value" id="soil-moisture">—</span>
+                        <span class="reading-label">
+                            Soil moisture voltage
+                        </span>
+                        <span
+                            class="reading-value"
+                            id="soil-moisture"
+                        >—</span>
                     </div>
+
                     <div class="reading">
-                        <span class="reading-label">Soil pH</span>
-                        <span class="reading-value" id="soil-ph">—</span>
+                        <span class="reading-label">
+                            Moisture condition
+                        </span>
+                        <span
+                            class="reading-value"
+                            id="soil-moisture-level"
+                        >—</span>
+                    </div>
+
+                    <div class="reading">
+                        <span class="reading-label">
+                            Raw pH sensor voltage
+                        </span>
+                        <span
+                            class="reading-value"
+                            id="soil-ph-raw"
+                        >—</span>
+                    </div>
+
+                    <div class="reading">
+                        <span class="reading-label">
+                            Estimated soil pH
+                        </span>
+                        <span
+                            class="reading-value"
+                            id="soil-ph"
+                        >—</span>
+                    </div>
+
+                    <div class="reading">
+                        <span
+                            class="reading-label"
+                            id="soil-ph-calibration-label"
+                        >
+                            Calibration status
+                        </span>
+                        <span
+                            class="reading-value"
+                            id="soil-ph-calibration-status"
+                            role="status"
+                            aria-live="polite"
+                        >—</span>
                     </div>
                 </div>
+
+                <p class="metadata">
+                    Moisture categories are based on observed voltage
+                    calibration points, not a calibrated moisture percentage.
+                </p>
+
+                <p class="metadata">
+                    The pH estimate is empirical and should be interpreted
+                    cautiously, especially outside the documented
+                    calibration range of 0.66–3.30 V.
+                </p>
             </section>
         </div>
     </main>
@@ -153,7 +225,9 @@
     </footer>
 
     <script>
-        const runButton = document.getElementById("run-monitoring-button");
+        const runButton = document.getElementById(
+            "run-monitoring-button"
+        );
 
         const statusLabels = {
             idle: "Idle",
@@ -168,7 +242,11 @@
         let monitoringRequestInProgress = false;
 
         function displayValue(value, suffix = "") {
-            if (value === null || value === undefined || value === "") {
+            if (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) {
                 return "Not available";
             }
 
@@ -199,11 +277,14 @@
             switch (state) {
                 case "completed":
                     return "status-healthy";
+
                 case "aborted":
                 case "busy":
                     return "status-warning";
+
                 case "failed":
                     return "status-danger";
+
                 default:
                     return "status-neutral";
             }
@@ -228,8 +309,6 @@
 
             const isRunning = state === "running";
 
-            // Disable the button while a cycle is running or the
-            // initial request is still being submitted.
             runButton.disabled =
                 isRunning || monitoringRequestInProgress;
 
@@ -249,9 +328,10 @@
 
         async function refreshMonitoringStatus() {
             try {
-                const response = await fetch("/api/monitoring/status", {
-                    cache: "no-store"
-                });
+                const response = await fetch(
+                    "/api/monitoring/status",
+                    { cache: "no-store" }
+                );
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
@@ -264,30 +344,41 @@
                     "monitoring-message",
                     "Could not retrieve monitoring status. Check the server connection."
                 );
-                console.error("Could not retrieve monitoring status:", error);
+
+                console.error(
+                    "Could not retrieve monitoring status:",
+                    error
+                );
             }
         }
 
         async function startMonitoringCycle() {
-            if (monitoringRequestInProgress || runButton.disabled) {
+            if (
+                monitoringRequestInProgress ||
+                runButton.disabled
+            ) {
                 return;
             }
 
             monitoringRequestInProgress = true;
             runButton.disabled = true;
             runButton.textContent = "Starting...";
+
             setText(
                 "monitoring-message",
                 "Submitting monitoring request..."
             );
 
             try {
-                const response = await fetch("/api/monitoring/run", {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json"
+                const response = await fetch(
+                    "/api/monitoring/run",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json"
+                        }
                     }
-                });
+                );
 
                 const status = await response.json();
 
@@ -302,39 +393,108 @@
                     "monitoring-message",
                     "Could not start monitoring. Check the server connection and try again."
                 );
-                console.error("Could not start monitoring:", error);
+
+                console.error(
+                    "Could not start monitoring:",
+                    error
+                );
             } finally {
                 monitoringRequestInProgress = false;
 
-                // Re-read the backend's current state after releasing
-                // the request guard, so a completed cycle unlocks the button.
                 await refreshMonitoringStatus();
+            }
+        }
+
+        function updateSensorReadings(sensor) {
+            const moistureVoltage = sensor.soil_moisture;
+            const moistureLevel = sensor.soil_moisture_level;
+            const rawPhVoltage = sensor.soil_ph_raw_voltage;
+            const estimatedPh = sensor.soil_ph;
+            const phCalibrationValid =
+                sensor.soil_ph_calibration_valid;
+
+            // Soil moisture: raw voltage.
+            setText(
+                "soil-moisture",
+                moistureVoltage == null
+                    ? "Not available"
+                    : `${Number(moistureVoltage).toFixed(3)} V`
+            );
+
+            // Soil moisture: interpreted category.
+            setText(
+                "soil-moisture-level",
+                displayValue(moistureLevel)
+            );
+
+            // Soil pH: raw voltage.
+            setText(
+                "soil-ph-raw",
+                rawPhVoltage == null
+                    ? "Not available"
+                    : `${Number(rawPhVoltage).toFixed(3)} V`
+            );
+
+            // Soil pH: estimated value from the calibration equation.
+            setText(
+                "soil-ph",
+                estimatedPh == null
+                    ? "Not available"
+                    : Number(estimatedPh).toFixed(2)
+            );
+
+            // Calibration warning.
+            const calibrationStatus = document.getElementById(
+                "soil-ph-calibration-status"
+            );
+
+            if (phCalibrationValid === false) {
+                calibrationStatus.textContent =
+                    "Warning: outside calibration range (0.66–3.30 V)";
+                calibrationStatus.style.color = "#b42318";
+            } else if (phCalibrationValid === true) {
+                calibrationStatus.textContent =
+                    "Within calibration range";
+                calibrationStatus.style.color = "";
+            } else {
+                calibrationStatus.textContent = "Not available";
+                calibrationStatus.style.color = "";
             }
         }
 
         async function refreshDashboard() {
             try {
-                const response = await fetch("/api/latest", {
-                    cache: "no-store"
-                });
+                const response = await fetch(
+                    "/api/latest",
+                    { cache: "no-store" }
+                );
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
 
                 const result = await response.json();
+
                 const image = result.captured_image || {};
                 const sensor = result.sensor_reading || {};
                 const inference = result.inference || {};
                 const decision = result.decision || {};
 
                 setText("connection-status", "Connected");
-                setText("last-updated", displayValue(result.completed_at));
+                setText(
+                    "last-updated",
+                    displayValue(result.completed_at)
+                );
 
+                // Plant health status.
                 const healthStatus = decision.health_status;
 
                 if (healthStatus === "Healthy") {
-                    setStatus("health-status", "Healthy", "status-healthy");
+                    setStatus(
+                        "health-status",
+                        "Healthy",
+                        "status-healthy"
+                    );
                 } else if (
                     typeof healthStatus === "string" &&
                     healthStatus.toLowerCase().includes("alert")
@@ -370,7 +530,10 @@
                     );
                 }
 
-                setText("decision-reason", displayValue(decision.reason));
+                setText(
+                    "decision-reason",
+                    displayValue(decision.reason)
+                );
 
                 if (decision.should_alert === true) {
                     setStatus(
@@ -379,7 +542,11 @@
                         "status-danger"
                     );
                 } else if (decision.should_alert === false) {
-                    setStatus("alert-status", "No alert", "status-healthy");
+                    setStatus(
+                        "alert-status",
+                        "No alert",
+                        "status-healthy"
+                    );
                 } else {
                     setStatus(
                         "alert-status",
@@ -388,12 +555,18 @@
                     );
                 }
 
-                setText("prediction", displayValue(inference.prediction));
+                // Model inference.
+                setText(
+                    "prediction",
+                    displayValue(inference.prediction)
+                );
 
                 setText(
                     "confidence",
                     typeof inference.confidence === "number"
-                        ? `${(inference.confidence * 100).toFixed(1)}%`
+                        ? `${(
+                            inference.confidence * 100
+                        ).toFixed(1)}%`
                         : "Not available"
                 );
 
@@ -407,6 +580,7 @@
                     displayValue(inference.timestamp)
                 );
 
+                // Plant image metadata.
                 setText("image-path", displayValue(image.path));
 
                 setText(
@@ -416,24 +590,30 @@
                         : "Not available"
                 );
 
-                const plantImage = document.getElementById("plant-image");
-                plantImage.src =
-                    "{{ url_for('plant_image') }}" + `?t=${Date.now()}`;
-
-                setText(
-                    "soil-moisture",
-                    displayValue(sensor.soil_moisture)
+                const plantImage = document.getElementById(
+                    "plant-image"
                 );
 
-                setText("soil-ph", displayValue(sensor.soil_ph));
-                setText("connection-status", "Connected");
+                plantImage.src =
+                    "{{ url_for('plant_image') }}" +
+                    `?t=${Date.now()}`;
+
+                // Sensor readings.
+                updateSensorReadings(sensor);
             } catch (error) {
                 setText("connection-status", "Unavailable");
-                console.error("Could not refresh dashboard:", error);
+
+                console.error(
+                    "Could not refresh dashboard:",
+                    error
+                );
             }
         }
 
-        runButton.addEventListener("click", startMonitoringCycle);
+        runButton.addEventListener(
+            "click",
+            startMonitoringCycle
+        );
 
         refreshDashboard();
         refreshMonitoringStatus();
